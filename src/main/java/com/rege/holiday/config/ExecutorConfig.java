@@ -12,8 +12,8 @@ public class ExecutorConfig {
     @Bean
     public Executor holidayExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(8);
-        executor.setMaxPoolSize(16);
+        executor.setCorePoolSize(30);
+        executor.setMaxPoolSize(60);
         executor.setQueueCapacity(500);
         executor.setThreadNamePrefix("holiday-worker-");
         executor.initialize();
