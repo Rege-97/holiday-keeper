@@ -41,9 +41,7 @@ public class HolidayService implements ApplicationRunner {
 
         List<Country> countries = fetchAndSaveCountry();
 
-        List<Holiday> allHolidays = fetchHolidaysParallel(countries);
-
-        saveHolidays(allHolidays);
+        fetchAndSaveHolidays(countries);
 
         long endTime = System.currentTimeMillis();
 
@@ -64,7 +62,7 @@ public class HolidayService implements ApplicationRunner {
                 .map(countryMapper::toEntity)
                 .toList();
 
-        countryRepository.saveAll(countries);
+        countryRepository.batchInsert(countries);
         log.info("{}개 국가 정보 저장 완료", countries.size());
 
         return countries;
@@ -73,18 +71,18 @@ public class HolidayService implements ApplicationRunner {
     /**
      * 국가별 공휴일 병렬 조회
      */
-    private List<Holiday> fetchHolidaysParallel(List<Country> countries) {
-        List<CompletableFuture<List<Holiday>>> futures = countries.stream()
-                .map(country -> CompletableFuture.supplyAsync(
-                        () -> fetchHolidaysByCountry(country),
-                        holidayExecutor
-                ))
+    private void fetchAndSaveHolidays(List<Country> countries) {
+        List<CompletableFuture<Void>> futures = countries.stream()
+                .map(country -> CompletableFuture.runAsync(() -> {
+                    List<Holiday> holidays = fetchHolidaysByCountry(country);
+
+                    if (!holidays.isEmpty()) {
+                        holidayRepository.batchInsert(holidays);
+                    }
+                }, holidayExecutor))
                 .toList();
 
-        return futures.stream()
-                .map(CompletableFuture::join)
-                .flatMap(List::stream)
-                .toList();
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 
     /**
@@ -112,19 +110,5 @@ public class HolidayService implements ApplicationRunner {
 
         return list;
     }
-
-    /**
-     * 공휴일 저장
-     */
-    private void saveHolidays(List<Holiday> holidays) {
-        if (holidays.isEmpty()) {
-            log.warn("저장할 공휴일 데이터가 없습니다.");
-            return;
-        }
-
-        holidayRepository.saveAll(holidays);
-        log.info("{}개 공휴일 정보 저장 완료", holidays.size());
-    }
-
 
 }
