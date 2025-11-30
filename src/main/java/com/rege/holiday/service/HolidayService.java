@@ -15,6 +15,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -35,49 +36,95 @@ public class HolidayService implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("==========데이터 적제 시작==========");
+
         long startTime = System.currentTimeMillis();
 
+        List<Country> countries = fetchAndSaveCountry();
+
+        List<Holiday> allHolidays = fetchHolidaysParallel(countries);
+
+        saveHolidays(allHolidays);
+
+        long endTime = System.currentTimeMillis();
+
+        log.info("========== 데이터 적재 완료 (소요시간: {}ms) ==========", (endTime - startTime));
+    }
+
+    /**
+     * 국가 데이터 조회 및 엔티티 저장
+     */
+    private List<Country> fetchAndSaveCountry() {
         List<CountryDto> countryDtos = holidayApiClient.getAvailableCountries();
+
         if (countryDtos == null || countryDtos.isEmpty()) {
-            log.error("국가 목록을 가져오지 못했습니다.");
-            return;
+            throw new IllegalStateException("국가 목록을 가져오지 못했습니다.");
         }
 
         List<Country> countries = countryDtos.stream()
                 .map(countryMapper::toEntity)
                 .toList();
+
         countryRepository.saveAll(countries);
         log.info("{}개 국가 정보 저장 완료", countries.size());
 
+        return countries;
+    }
+
+    /**
+     * 국가별 공휴일 병렬 조회
+     */
+    private List<Holiday> fetchHolidaysParallel(List<Country> countries) {
         List<CompletableFuture<List<Holiday>>> futures = countries.stream()
-                .map(country -> CompletableFuture.supplyAsync(() -> {
-                    List<Holiday> list = new ArrayList<>();
-                    for (int year = 2020; year <= 2025; year++) {
-                        try {
-                            List<HolidayDto> dtos = holidayApiClient.getHolidays(year, country.getCountryCode());
-                            if (dtos != null) {
-                                dtos.forEach(dto -> list.add(holidayMapper.toEntity(dto, country)));
-                            }
-                        } catch (Exception e) {
-                            log.warn("데이터 수집 실패 - 국가: {}, 연도: {}", country.getCountryCode(), year);
-                        }
-                    }
-                    return list;
-                }, holidayExecutor))
+                .map(country -> CompletableFuture.supplyAsync(
+                        () -> fetchHolidaysByCountry(country),
+                        holidayExecutor
+                ))
                 .toList();
 
-        List<Holiday> allHolidays = futures.stream()
+        return futures.stream()
                 .map(CompletableFuture::join)
                 .flatMap(List::stream)
                 .toList();
-
-        if (!allHolidays.isEmpty()) {
-            holidayRepository.saveAll(allHolidays);
-        }
-        log.info("{}개 공휴일 정보 저장 완료", allHolidays.size());
-
-        long endTime = System.currentTimeMillis();
-        log.info("========== 데이터 적재 완료 (소요시간: {}ms) ==========", (endTime - startTime));
     }
+
+    /**
+     * 특정 국가의 최근 5년 공휴일 단건 조회
+     */
+    private List<Holiday> fetchHolidaysByCountry(Country country) {
+        LocalDate localDate = LocalDate.now();
+        int nowYear = localDate.getYear();
+        List<Holiday> list = new ArrayList<>();
+
+        for (int year = nowYear - 4; year <= nowYear; year++) {
+            try {
+                List<HolidayDto> dtos =
+                        holidayApiClient.getHolidays(year, country.getCountryCode());
+
+                if (dtos != null) {
+                    dtos.forEach(dto -> list.add(holidayMapper.toEntity(dto, country)));
+                }
+
+            } catch (Exception e) {
+                log.warn("데이터 수집 실패 - 국가: {}, 연도: {}",
+                        country.getCountryCode(), year);
+            }
+        }
+
+        return list;
+    }
+
+    /**
+     * 공휴일 저장
+     */
+    private void saveHolidays(List<Holiday> holidays) {
+        if (holidays.isEmpty()) {
+            log.warn("저장할 공휴일 데이터가 없습니다.");
+            return;
+        }
+
+        holidayRepository.saveAll(holidays);
+        log.info("{}개 공휴일 정보 저장 완료", holidays.size());
+    }
+
 
 }
