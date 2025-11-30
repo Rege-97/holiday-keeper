@@ -1,12 +1,10 @@
 package com.rege.holiday.repository;
 
 import com.rege.holiday.entity.Country;
-import com.rege.holiday.entity.Holiday;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Date;
 import java.util.List;
 
 @Repository

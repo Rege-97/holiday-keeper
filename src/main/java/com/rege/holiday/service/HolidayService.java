@@ -69,7 +69,7 @@ public class HolidayService implements ApplicationRunner {
     }
 
     /**
-     * 국가별 공휴일 병렬 조회
+     * 국가별 공휴일 병렬 조회 및 저장
      */
     private void fetchAndSaveHolidays(List<Country> countries) {
         List<CompletableFuture<Void>> futures = countries.stream()
