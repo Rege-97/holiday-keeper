@@ -39,6 +39,9 @@ public class HolidayController {
         return ResponseEntity.ok(ApiResponse.success(res, "공휴일 조회 성공"));
     }
 
+    /**
+     * 연도와 국가 코드에 따른 공휴일 재동기화
+     */
     @PostMapping("/sync")
     public ResponseEntity<?> syncHolidays(@RequestBody @Valid HolidaySyncRequest req) {
         holidayService.syncHolidays(req);

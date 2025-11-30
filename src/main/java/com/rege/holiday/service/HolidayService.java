@@ -74,6 +74,9 @@ public class HolidayService implements ApplicationRunner {
         return new HolidayPageResponse(responses, page == 0 ? 1 : page, size, totalElements, totalPages);
     }
 
+    /**
+     * 연도와 국가 코드에 따른 공휴일 재동기화
+     */
     @Transactional
     public void syncHolidays(HolidaySyncRequest req) {
         Country country = countryRepository.findById(req.getCountryCode())
