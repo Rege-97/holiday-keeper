@@ -2,15 +2,14 @@ package com.rege.holiday.contoller;
 
 import com.rege.holiday.common.response.ApiResponse;
 import com.rege.holiday.dto.HolidayPageResponse;
+import com.rege.holiday.dto.HolidaySyncRequest;
 import com.rege.holiday.dto.SortOrder;
 import com.rege.holiday.service.HolidayService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
@@ -38,5 +37,11 @@ public class HolidayController {
         HolidayPageResponse res = holidayService.getHolidays(year, countryCode, from, to, type, page, size, sortOrder);
 
         return ResponseEntity.ok(ApiResponse.success(res, "공휴일 조회 성공"));
+    }
+
+    @PostMapping("/sync")
+    public ResponseEntity<?> syncHolidays(@RequestBody @Valid HolidaySyncRequest req) {
+        holidayService.syncHolidays(req);
+        return ResponseEntity.noContent().build();
     }
 }
