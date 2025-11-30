@@ -2,6 +2,7 @@ package com.rege.holiday.repository;
 
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.rege.holiday.dto.SortOrder;
 import com.rege.holiday.entity.Holiday;
@@ -89,7 +90,11 @@ public class HolidayRepositoryImpl implements HolidayRepositoryCustom {
     }
 
     private BooleanExpression typeContains(String type) {
-        return StringUtils.hasText(type) ? holiday.types.contains(type) : null;
+        if (!StringUtils.hasText(type)) {
+            return null;
+        }
+        return Expressions.stringTemplate("CAST({0} AS string)", holiday.types)
+                .contains(type);
     }
 
     private BooleanExpression dateRange(LocalDate from, LocalDate to) {
