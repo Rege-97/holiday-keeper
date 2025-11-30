@@ -33,7 +33,16 @@ public class HolidayRepositoryImpl implements HolidayRepositoryCustom {
 
         String sql = "INSERT INTO holidays " +
                 "(date, local_name, name, country_code, fixed, global, counties, launch_year, types) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)" +
+                "ON DUPLICATE KEY UPDATE " +
+                "local_name = VALUES(local_name), " +
+                "name = VALUES(name), " +
+                "country_code = VALUES(country_code), " +
+                "fixed = VALUES(fixed), " +
+                "global = VALUES(global), " +
+                "counties = VALUES(counties), " +
+                "launch_year = VALUES(launch_year), " +
+                "types = VALUES(types)";
 
         jdbcTemplate.batchUpdate(sql, holidays, 1000, (ps, holiday) -> {
             ps.setDate(1, Date.valueOf(holiday.getDate()));
