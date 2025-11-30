@@ -26,6 +26,13 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(msg));
     }
 
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<?> handleNotFoundException(NotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     // 그 외 에러
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleOtherExceptions(Exception ex) {

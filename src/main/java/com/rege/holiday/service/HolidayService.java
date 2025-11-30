@@ -4,6 +4,7 @@ import com.rege.holiday.api.HolidayApiClient;
 import com.rege.holiday.dto.*;
 import com.rege.holiday.entity.Country;
 import com.rege.holiday.entity.Holiday;
+import com.rege.holiday.exception.NotFoundException;
 import com.rege.holiday.mapper.CountryMapper;
 import com.rege.holiday.mapper.HolidayMapper;
 import com.rege.holiday.repository.CountryRepository;
@@ -71,6 +72,28 @@ public class HolidayService implements ApplicationRunner {
         int totalPages = (int) Math.ceil((double) totalElements / size);
 
         return new HolidayPageResponse(responses, page == 0 ? 1 : page, size, totalElements, totalPages);
+    }
+
+    /**
+     * 연도와 국가 코드에 따른 공휴일 재동기화
+     */
+    @Transactional
+    public void syncHolidays(HolidaySyncRequest req) {
+        Country country = countryRepository.findById(req.getCountryCode())
+                .orElseThrow(() -> new NotFoundException("해당 국가를 찾을 수 없습니다."));
+
+        List<HolidayDto> dtos = holidayApiClient.getHolidays(req.getYear(), req.getCountryCode());
+
+        if (dtos == null || dtos.isEmpty()) {
+            log.info("갱신할 데이터가 없습니다. (year={}, country={})", req.getYear(), req.getCountryCode());
+            return;
+        }
+
+        List<Holiday> holidays = dtos.stream()
+                .map(dto -> holidayMapper.toEntity(dto, country))
+                .toList();
+
+        holidayRepository.batchInsert(holidays);
     }
 
     /**
