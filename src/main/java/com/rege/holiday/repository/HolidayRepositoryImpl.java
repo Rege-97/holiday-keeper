@@ -5,6 +5,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.rege.holiday.dto.SortOrder;
 import com.rege.holiday.entity.Holiday;
+import com.rege.holiday.entity.QHoliday;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static com.rege.holiday.entity.QHoliday.holiday;
+import static com.rege.holiday.entity.QCountry.country;
 
 @Repository
 @RequiredArgsConstructor
@@ -50,6 +52,7 @@ public class HolidayRepositoryImpl implements HolidayRepositoryCustom {
     public List<Holiday> findByFilter(Integer year, String countryCode, LocalDate from, LocalDate to, String type,
                                       int page, int size, SortOrder sortOrder) {
         return queryFactory.selectFrom(holiday)
+                .join(holiday.country, country).fetchJoin()
                 .where(
                         yearEq(year),
                         countryCodeEq(countryCode),
