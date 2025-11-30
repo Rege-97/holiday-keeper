@@ -3,7 +3,6 @@ package com.rege.holiday.contoller;
 import com.rege.holiday.common.response.ApiResponse;
 import com.rege.holiday.dto.HolidayPageResponse;
 import com.rege.holiday.dto.SortOrder;
-import com.rege.holiday.entity.Holiday;
 import com.rege.holiday.service.HolidayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,6 +21,9 @@ public class HolidayController {
 
     private final HolidayService holidayService;
 
+    /**
+     * 필터 기반 공휴일 조회
+     */
     @GetMapping
     public ResponseEntity<?> getHolidays(
             @RequestParam(required = false) Integer year,
