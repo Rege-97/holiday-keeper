@@ -1,17 +1,28 @@
 package com.rege.holiday.repository;
 
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.rege.holiday.dto.SortOrder;
 import com.rege.holiday.entity.Holiday;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
+
+import static com.rege.holiday.entity.QCountry.country;
+import static com.rege.holiday.entity.QHoliday.holiday;
 
 @Repository
 @RequiredArgsConstructor
 public class HolidayRepositoryImpl implements HolidayRepositoryCustom {
 
+    private final JPAQueryFactory queryFactory;
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -36,4 +47,68 @@ public class HolidayRepositoryImpl implements HolidayRepositoryCustom {
             ps.setString(9, String.join(",", holiday.getTypes() != null ? holiday.getTypes() : List.of()));
         });
     }
+
+    @Override
+    public List<Holiday> findByFilter(Integer year, String countryCode, LocalDate from, LocalDate to, String type,
+                                      int page, int size, SortOrder sortOrder) {
+        return queryFactory.selectFrom(holiday)
+                .join(holiday.country, country).fetchJoin()
+                .where(
+                        yearEq(year),
+                        countryCodeEq(countryCode),
+                        typeContains(type),
+                        dateRange(from, to)
+                )
+                .orderBy(
+                        sortBy(sortOrder),
+                        holiday.id.desc()
+                )
+                .offset((long) page * size)
+                .limit(size)
+                .fetch();
+    }
+
+    @Override
+    public Long countByFilter(Integer year, String countryCode, LocalDate from, LocalDate to, String type) {
+        return queryFactory.select(holiday.count())
+                .from(holiday)
+                .where(
+                        yearEq(year),
+                        countryCodeEq(countryCode),
+                        typeContains(type),
+                        dateRange(from, to)
+                )
+                .fetchOne();
+    }
+
+    private BooleanExpression yearEq(Integer year) {
+        return year != null ? holiday.date.year().eq(year) : null;
+    }
+
+    private BooleanExpression countryCodeEq(String countryCode) {
+        return countryCode != null ? holiday.country.countryCode.eq(countryCode) : null;
+    }
+
+    private BooleanExpression typeContains(String type) {
+        if (!StringUtils.hasText(type)) {
+            return null;
+        }
+        return Expressions.stringTemplate("CAST({0} AS string)", holiday.types)
+                .contains(type);
+    }
+
+    private BooleanExpression dateRange(LocalDate from, LocalDate to) {
+        if (from == null && to == null) return null;
+        if (from == null) return holiday.date.loe(to);
+        if (to == null) return holiday.date.goe(from);
+        return holiday.date.between(from, to);
+    }
+
+    private OrderSpecifier<?> sortBy(SortOrder sortOrder) {
+        if (sortOrder == SortOrder.DESC) {
+            return holiday.date.desc();
+        }
+        return holiday.date.asc();
+    }
+
 }

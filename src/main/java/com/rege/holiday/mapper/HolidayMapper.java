@@ -1,6 +1,7 @@
 package com.rege.holiday.mapper;
 
 import com.rege.holiday.dto.HolidayDto;
+import com.rege.holiday.dto.HolidayResponse;
 import com.rege.holiday.entity.Country;
 import com.rege.holiday.entity.Holiday;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,21 @@ public class HolidayMapper {
                 .counties(dto.getCounties())
                 .launchYear(dto.getLaunchYear())
                 .types(dto.getTypes())
+                .build();
+    }
+
+    public HolidayResponse toResponse(Holiday holiday) {
+        return HolidayResponse.builder()
+                .id(holiday.getId())
+                .date(holiday.getDate())
+                .localName(holiday.getLocalName())
+                .name(holiday.getName())
+                .countryName(holiday.getCountry().getName())
+                .fixed(holiday.isFixed())
+                .global(holiday.isGlobal())
+                .counties(holiday.getCounties())
+                .launchYear(holiday.getLaunchYear())
+                .types(holiday.getTypes())
                 .build();
     }
 }

@@ -1,8 +1,7 @@
 package com.rege.holiday.service;
 
 import com.rege.holiday.api.HolidayApiClient;
-import com.rege.holiday.dto.CountryDto;
-import com.rege.holiday.dto.HolidayDto;
+import com.rege.holiday.dto.*;
 import com.rege.holiday.entity.Country;
 import com.rege.holiday.entity.Holiday;
 import com.rege.holiday.mapper.CountryMapper;
@@ -14,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -33,6 +33,9 @@ public class HolidayService implements ApplicationRunner {
     private final HolidayMapper holidayMapper;
     private final Executor holidayExecutor;
 
+    /**
+     * 최근 5년의 공휴일 수집 및 적재
+     */
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("==========데이터 적제 시작==========");
@@ -46,6 +49,28 @@ public class HolidayService implements ApplicationRunner {
         long endTime = System.currentTimeMillis();
 
         log.info("========== 데이터 적재 완료 (소요시간: {}ms) ==========", (endTime - startTime));
+    }
+
+    /**
+     * 필터 기반 공휴일 조회
+     */
+    @Transactional(readOnly = true)
+    public HolidayPageResponse getHolidays(Integer year, String countryCode, LocalDate from, LocalDate to, String type,
+                                           int page, int size, SortOrder sortOrder) {
+
+        int pageIndex = Math.max(page - 1, 0);
+
+        List<Holiday> holidays = holidayRepository.findByFilter(year, countryCode, from, to, type, pageIndex, size,
+                sortOrder);
+
+        List<HolidayResponse> responses = holidays.stream()
+                .map(holidayMapper::toResponse)
+                .toList();
+
+        long totalElements = holidayRepository.countByFilter(year, countryCode, from, to, type);
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        return new HolidayPageResponse(responses, page == 0 ? 1 : page, size, totalElements, totalPages);
     }
 
     /**
