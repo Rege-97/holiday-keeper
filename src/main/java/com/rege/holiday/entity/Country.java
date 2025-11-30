@@ -1,5 +1,6 @@
 package com.rege.holiday.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 public class Country {
 
     @Id
+    @Column(length = 2)
     private String countryCode;
 
     private String name;
