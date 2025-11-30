@@ -12,7 +12,12 @@ import java.util.List;
 
 @Entity
 @Getter
-@Table(name = "holidays")
+@Table(name = "holidays", uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_holiday_country_date_name",
+                columnNames = {"country_code", "date", "name"}
+        )
+})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Holiday {
 
