@@ -12,4 +12,6 @@ public interface HolidayRepositoryCustom {
 
     List<Holiday> findByFilter(Integer year, String countryCode, LocalDate from, LocalDate to, String type,
                                int page, int size, SortOrder sortOrder);
+
+    Long countByFilter(Integer year, String countryCode, LocalDate from, LocalDate to, String type);
 }

@@ -68,6 +68,19 @@ public class HolidayRepositoryImpl implements HolidayRepositoryCustom {
                 .fetch();
     }
 
+    @Override
+    public Long countByFilter(Integer year, String countryCode, LocalDate from, LocalDate to, String type) {
+        return queryFactory.select(holiday.count())
+                .from(holiday)
+                .where(
+                        yearEq(year),
+                        countryCodeEq(countryCode),
+                        typeContains(type),
+                        dateRange(from, to)
+                )
+                .fetchOne();
+    }
+
     private BooleanExpression yearEq(Integer year) {
         return year != null ? holiday.date.year().eq(year) : null;
     }
