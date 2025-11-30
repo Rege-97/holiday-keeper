@@ -1,7 +1,9 @@
 package com.rege.holiday.repository;
 
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.rege.holiday.dto.SortOrder;
 import com.rege.holiday.entity.Holiday;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -46,17 +48,20 @@ public class HolidayRepositoryImpl implements HolidayRepositoryCustom {
 
     @Override
     public List<Holiday> findByFilter(Integer year, String countryCode, LocalDate from, LocalDate to, String type,
-                                      Long lastId, int size) {
+                                      int page, int size, SortOrder sortOrder) {
         return queryFactory.selectFrom(holiday)
                 .where(
                         yearEq(year),
                         countryCodeEq(countryCode),
                         typeContains(type),
-                        dateRange(from, to),
-                        idLt(lastId)
+                        dateRange(from, to)
                 )
-                .orderBy(holiday.id.desc())
-                .limit(size + 1)
+                .orderBy(
+                        sortBy(sortOrder),
+                        holiday.id.desc()
+                )
+                .offset((long) page * size)
+                .limit(size)
                 .fetch();
     }
 
@@ -79,8 +84,11 @@ public class HolidayRepositoryImpl implements HolidayRepositoryCustom {
         return holiday.date.between(from, to);
     }
 
-    private BooleanExpression idLt(Long lastId) {
-        return lastId != null ? holiday.id.lt(lastId) : null;
+    private OrderSpecifier<?> sortBy(SortOrder sortOrder) {
+        if (sortOrder == SortOrder.DESC) {
+            return holiday.date.desc();
+        }
+        return holiday.date.asc();
     }
 
 }
