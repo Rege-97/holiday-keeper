@@ -1,5 +1,6 @@
 package com.rege.holiday.entity;
 
+import com.rege.holiday.common.converter.StringListConverter;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -7,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
@@ -34,13 +36,13 @@ public class Holiday {
 
     private boolean global;
 
-    @Column(length = 1000)
-    private String counties;
+    @Convert(converter = StringListConverter.class)
+    private List<String> counties;
 
     private Integer launchYear;
 
-    @Column(length = 500)
-    private String types;
+    @Convert(converter = StringListConverter.class)
+    private List<String> types;
 
     @Builder
     public Holiday(LocalDate date,
@@ -49,9 +51,9 @@ public class Holiday {
                    Country country,
                    boolean fixed,
                    boolean global,
-                   String counties,
+                   List<String> counties,
                    Integer launchYear,
-                   String types) {
+                   List<String> types) {
 
         this.date = date;
         this.localName = localName;
