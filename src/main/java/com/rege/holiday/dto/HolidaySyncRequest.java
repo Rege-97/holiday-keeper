@@ -1,11 +1,13 @@
 package com.rege.holiday.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class HolidaySyncRequest {
 
     @Min(1900)
