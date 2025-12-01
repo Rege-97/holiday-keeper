@@ -97,6 +97,19 @@ public class HolidayService implements ApplicationRunner {
     }
 
     /**
+     * 연도와 국가 코드에 따른 공휴일 삭제
+     */
+    @Transactional
+    public void deleteHolidays(int year, String countryCode) {
+        Country country = countryRepository.findById(countryCode)
+                .orElseThrow(() -> new NotFoundException("해당 국가를 찾을 수 없습니다."));
+
+        holidayRepository.deleteByCountryAndYear(countryCode, year);
+        log.info("데이터 삭제 완료: year={}, country={}", year, countryCode);
+    }
+
+
+    /**
      * 국가 데이터 조회 및 엔티티 저장
      */
     private List<Country> fetchAndSaveCountry() {

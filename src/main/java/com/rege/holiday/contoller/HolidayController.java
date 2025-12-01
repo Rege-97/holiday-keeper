@@ -47,4 +47,14 @@ public class HolidayController {
         holidayService.syncHolidays(req);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * 연도와 국가 코드에 따른 공휴일 삭제
+     */
+    @DeleteMapping
+    public ResponseEntity<?> deleteHoliday(@RequestParam(required = false) Integer year,
+                                           @RequestParam(required = false) String countryCode) {
+        holidayService.deleteHolidays(year, countryCode);
+        return ResponseEntity.noContent().build();
+    }
 }
