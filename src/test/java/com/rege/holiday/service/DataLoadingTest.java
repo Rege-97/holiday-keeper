@@ -44,6 +44,14 @@ public class DataLoadingTest {
 
         List<HolidayDto> holidays = List.of(
                 HolidayDto.builder()
+                        .date("2020-01-01")
+                        .localName("신정")
+                        .name("New Year's Day")
+                        .countryCode("KR")
+                        .types(List.of("Public"))
+                        .build(),
+
+                HolidayDto.builder()
                         .date("2021-01-01")
                         .localName("신정")
                         .name("New Year's Day")
@@ -90,7 +98,7 @@ public class DataLoadingTest {
 
         // then
         assertThat(countryRepository.count()).isEqualTo(1);
-        assertThat(holidayRepository.count()).isEqualTo(5);
+        assertThat(holidayRepository.count()).isEqualTo(6);
     }
 
     @Test

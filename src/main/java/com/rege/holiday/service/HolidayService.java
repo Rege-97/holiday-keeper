@@ -165,7 +165,7 @@ public class HolidayService implements ApplicationRunner {
         int nowYear = localDate.getYear();
         List<Holiday> list = new ArrayList<>();
 
-        for (int year = nowYear - 4; year <= nowYear; year++) {
+        for (int year = nowYear - 5; year <= nowYear; year++) {
             try {
                 List<HolidayDto> dtos =
                         holidayApiClient.getHolidays(year, country.getCountryCode());
