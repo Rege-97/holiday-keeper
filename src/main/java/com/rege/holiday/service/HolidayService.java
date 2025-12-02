@@ -146,10 +146,15 @@ public class HolidayService implements ApplicationRunner {
     private void fetchAndSaveHolidays(List<Country> countries) {
         List<CompletableFuture<Void>> futures = countries.stream()
                 .map(country -> CompletableFuture.runAsync(() -> {
-                    List<Holiday> holidays = fetchHolidaysByCountry(country);
+                    try {
+                        List<Holiday> holidays = fetchHolidaysByCountry(country);
 
-                    if (!holidays.isEmpty()) {
-                        holidayRepository.batchInsert(holidays);
+                        if (!holidays.isEmpty()) {
+                            holidayRepository.batchInsert(holidays);
+                        }
+                    } catch (Exception e) {
+                        log.error("국가={} 공휴일 저장 중 오류 발생: {}",
+                                country.getCountryCode(), e.getMessage());
                     }
                 }, holidayExecutor))
                 .toList();
