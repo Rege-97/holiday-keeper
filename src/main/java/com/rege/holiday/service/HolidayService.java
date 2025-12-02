@@ -11,6 +11,7 @@ import com.rege.holiday.repository.CountryRepository;
 import com.rege.holiday.repository.HolidayRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
@@ -34,21 +35,31 @@ public class HolidayService implements ApplicationRunner {
     private final HolidayMapper holidayMapper;
     private final Executor holidayExecutor;
 
+    @Value("${holiday.job.enabled:true}")
+    private boolean isJobEnabled;
+
     /**
-     * 최근 5년의 공휴일 수집 및 적재
+     * 앱 시작 시 자동 실행
      */
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        log.info("==========데이터 적제 시작==========");
+        if (!isJobEnabled) {
+            return;
+        }
+        loadData();
+    }
 
+    /**
+     * 최근 5년의 공휴일 수집 및 적재
+     */
+    public void loadData() {
+        log.info("==========데이터 적재 시작==========");
         long startTime = System.currentTimeMillis();
 
         List<Country> countries = fetchAndSaveCountry();
-
         fetchAndSaveHolidays(countries);
 
         long endTime = System.currentTimeMillis();
-
         log.info("========== 데이터 적재 완료 (소요시간: {}ms) ==========", (endTime - startTime));
     }
 
@@ -135,10 +146,15 @@ public class HolidayService implements ApplicationRunner {
     private void fetchAndSaveHolidays(List<Country> countries) {
         List<CompletableFuture<Void>> futures = countries.stream()
                 .map(country -> CompletableFuture.runAsync(() -> {
-                    List<Holiday> holidays = fetchHolidaysByCountry(country);
+                    try {
+                        List<Holiday> holidays = fetchHolidaysByCountry(country);
 
-                    if (!holidays.isEmpty()) {
-                        holidayRepository.batchInsert(holidays);
+                        if (!holidays.isEmpty()) {
+                            holidayRepository.batchInsert(holidays);
+                        }
+                    } catch (Exception e) {
+                        log.error("국가={} 공휴일 저장 중 오류 발생: {}",
+                                country.getCountryCode(), e.getMessage());
                     }
                 }, holidayExecutor))
                 .toList();
@@ -154,7 +170,7 @@ public class HolidayService implements ApplicationRunner {
         int nowYear = localDate.getYear();
         List<Holiday> list = new ArrayList<>();
 
-        for (int year = nowYear - 4; year <= nowYear; year++) {
+        for (int year = nowYear - 5; year <= nowYear; year++) {
             try {
                 List<HolidayDto> dtos =
                         holidayApiClient.getHolidays(year, country.getCountryCode());

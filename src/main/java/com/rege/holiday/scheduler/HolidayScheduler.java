@@ -34,7 +34,7 @@ public class HolidayScheduler {
         long start = System.currentTimeMillis();
 
         int currentYear = LocalDate.now().getYear();
-        int[] targetYears = {currentYear - 1, currentYear + 1};
+        int[] targetYears = {currentYear - 1, currentYear};
 
         List<Country> countries = countryRepository.findAll();
 

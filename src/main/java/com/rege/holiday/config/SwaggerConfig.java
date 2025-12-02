@@ -13,7 +13,7 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Holiday Keeper API")
-                        .description("플랜잇스퀘어 백엔드 개발자 채용 과제 - 공휴일 관리 서비스")
+                        .description("김채현 플랜잇스퀘어 백엔드 개발자 채용 과제 - 공휴일 관리 서비스")
                         .version("v1.0.0"));
     }
 }
