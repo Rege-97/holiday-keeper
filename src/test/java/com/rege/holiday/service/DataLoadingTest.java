@@ -5,11 +5,13 @@ import com.rege.holiday.dto.CountryDto;
 import com.rege.holiday.dto.HolidayDto;
 import com.rege.holiday.repository.CountryRepository;
 import com.rege.holiday.repository.HolidayRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,9 +34,15 @@ public class DataLoadingTest {
     @MockitoBean
     private HolidayApiClient holidayApiClient;
 
+    @AfterEach
+    void tearDown() {
+        holidayRepository.deleteAll();
+        countryRepository.deleteAll();
+    }
+
     @Test
     @DisplayName("앱 실행 시 외부 API 데이터를 가져와 DB에 적재한다.")
-    void dataLoadingIntegrationTest() throws Exception {
+    void dataLoadingIntegrationTest() {
         // given
         CountryDto korea = CountryDto.builder()
                 .countryCode("KR")
@@ -115,7 +123,7 @@ public class DataLoadingTest {
 
     @Test
     @DisplayName("특정 국가 공휴일 조회 실패 시, 해당 건만 건너뛰고 실행 완료된다.")
-    void run_GetHolidays_Fail() throws Exception {
+    void run_GetHolidays_Fail() {
         // given
         CountryDto korea = CountryDto.builder()
                 .countryCode("KR")
